@@ -14,6 +14,7 @@ const emailUrl = process.env.EMAIL_URL_Text;
 const emailAttachment = process.env.Email_URL_Attachments
 const emailToken = process.env.EMAIL_TOKEN;
 const FormData = require('form-data');
+const moment = require('moment');
 
 const bodyParser = require('body-parser');
 const fileUpload = require('express-fileupload');
@@ -28,6 +29,7 @@ app.use(fileUpload({
     limits: { fileSize: 50 * 1024 * 1024 } // 50 MB
 }));
 
+
 // Your existing routes and middleware
 
 async function templateData(emailData) {
@@ -40,11 +42,11 @@ async function templateData(emailData) {
         "from": emailData.senderEmail,
         "subject": emailData.subjectEmail,
         "text": emailText,
-        "cc": emailData.cc,
+       // "cc": emailData.cc,
 
     });
 
-    const response = await fetch(`${emailAttachment}`, {
+    const response = await fetch(`${emailUrl}`, {
         method: 'post',
         body: body,
         headers: {
@@ -90,35 +92,50 @@ router.post('/uploadEmailExcel', async (req, res) => {
 
             // Extract email IDs and send emails
             for (const data of xlsxData) {
-               // const { email, subjectName, courseName,semName,examMonth,examYear,evaluationDeadline} = data;
+             const { email, subjectName, courseName,semName,examMonth,examYear,evaluationDeadline} = data;
 
-               const {email ,studentName } = data;
+              // const {email ,firstName } = data;
 
-                // console.log(email, studentName, )
 
-                // console.log("email_Ids",)
-                // const emailData = {
-                //     receiverName: 'Student', // Update with actual receiver name
-                //     receiverEmail: email, // Update with actual receiver email
-                //     subjectEmail: 'Reminder: On-Screen Checking Allocation',
-                //     senderEmail: 'osm@edulab.in', // Assuming req.user contains user information
-                //     subjectName: subjectName,
-                //     courseName : courseName,
-                //     semName:semName,
-                //     examMonth:examMonth,
-                //     examYear:examYear,
-                //     evaluationDeadline:evaluationDeadline
 
-                // }
-                      const emailData = {
+ let formattedDate = moment(evaluationDeadline, 'MM/DD/YYYY').format('DD-MM-YYYY', 'MM/DD/YYYY');
+//      console.log('step-1', formattedDate)
+
+                const emailData = {
                     receiverName: 'Student', // Update with actual receiver name
                     receiverEmail: email, // Update with actual receiver email
-                    subjectEmail: 'Important: HSNC University - Please Fill Out the Google Form with Your APAAR / ABC ID',
-                    senderEmail: 'noreply@studentscenter.in', // Assuming req.user contains user information
-                    studentName: studentName
+                    subjectEmail: 'Reminder: On-Screen Checking Allocation',
+                    senderEmail: 'osm@edulab.in', // Assuming req.user contains user information
+                    subjectName: subjectName,
+                    courseName : courseName,
+                    semName:semName,
+                    examMonth:examMonth,
+                    examYear:examYear,
+                    evaluationDeadline:formattedDate
 
+                    //evaluationDeadline: `moment(${evaluationDeadline}).format('YYYY-MM-DD')`
                 }
-                console.log("emailData",emailData.receiverEmail,emailData.studentName)
+
+
+                // const emailData={
+                //     receiverName: 'Student', // Update with actual receiver name
+                //     receiverEmail: email, // Update with actual receiver email
+                //     subjectEmail: 'P.A.H.S.U:Login Credentials for OSM Tool',
+                //     senderEmail: 'osm@edulab.in', // Assuming req.user contains user information
+                //     firstName: firstName,
+                //     userName: email
+
+                // }
+                console.log("email_Ids",emailData.receiverEmail,emailData.subjectName,emailData.courseName,emailData.semName,emailData.examMonth,emailData.examYear,emailData.evaluationDeadline)
+                //       const emailData = {
+                //     receiverName: 'Student', // Update with actual receiver name
+                //     receiverEmail: email, // Update with actual receiver email
+                //     subjectEmail: 'Important: HSNC University - Please Fill Out the Google Form with Your APAAR / ABC ID',
+                //     senderEmail: 'noreply@studentscenter.in', // Assuming req.user contains user information
+                //     studentName: studentName
+
+                // }
+                //console.log("emailData",emailData.receiverEmail,emailData.studentName)
                 await templateData(emailData);
                 emailCount++
             }
@@ -210,6 +227,7 @@ router.post('/uploadEmailWithAttachments', async (req, res) => {
         // Extract email IDs and send emails
         for (const entry of xlsxData) {
             const { email, studentName } = entry;
+            console.log("email",email);
 
             // if (!email) {
             //     console.warn('Skipping entry with missing email:', entry);
